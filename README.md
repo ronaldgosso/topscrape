@@ -6,6 +6,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/topscrape.svg)](https://pypi.org/project/topscrape/)
 [![CI](https://github.com/ronaldgosso/topscrape/actions/workflows/ci.yml/badge.svg)](https://github.com/ronaldgosso/topscrape/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[Website - 🌐](https://ronaldgosso.github.io/topscrape/)
 
 > **Declarative, resilient, and typed web scraping.**  
 > Define *what* you want — topscrape figures out *how* to get it, even when the site changes.
