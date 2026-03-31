@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "structscrape"
+name = "topscrape"
 version = "0.1.0"
 description = "Declarative, resilient, and typed web scraping with Pydantic and selector fallback chains."
 readme = "README.md"
@@ -45,16 +45,16 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://ronaldgosso.github.io/structscrape"
-Repository = "https://github.com/ronaldgosso/structscrape"
-"Bug Tracker" = "https://github.com/ronaldgosso/structscrape/issues"
+Homepage = "https://ronaldgosso.github.io/topscrape"
+Repository = "https://github.com/ronaldgosso/topscrape"
+"Bug Tracker" = "https://github.com/ronaldgosso/topscrape/issues"
 
 [project.scripts]
-structscrape = "structscrape.cli:main"
+topscrape = "topscrape.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["structscrape*"]
+include = ["topscrape*"]
 
 [tool.ruff]
 line-length = 100
