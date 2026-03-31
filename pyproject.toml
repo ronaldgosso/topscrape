@@ -1,0 +1,77 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "structscrape"
+version = "0.1.0"
+description = "Declarative, resilient, and typed web scraping with Pydantic and selector fallback chains."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Ronald Isack Gosso", email = "ronaldgosso@gmail.com" }]
+keywords = [
+    "scraping", "web-scraping", "pydantic", "parsel",
+    "css-selectors", "xpath", "typed", "declarative"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "httpx>=0.27",
+    "parsel>=1.9",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+    "black>=24.0",
+    "mypy>=1.10",
+    "twine>=5.0",
+    "build>=1.2",
+    "responses>=0.25",
+]
+
+[project.urls]
+Homepage = "https://ronaldgosso.github.io/structscrape"
+Repository = "https://github.com/ronaldgosso/structscrape"
+"Bug Tracker" = "https://github.com/ronaldgosso/structscrape/issues"
+
+[project.scripts]
+structscrape = "structscrape.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["structscrape*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
