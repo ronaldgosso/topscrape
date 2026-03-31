@@ -11,7 +11,7 @@ from topscrape.exceptions import (
 from topscrape.fields import Field
 from topscrape.models import ScraperModel
 
-__version__ = "0.1.0"
+__version__ = "0.1.3"
 __all__ = [
     "ScraperModel",
     "Field",

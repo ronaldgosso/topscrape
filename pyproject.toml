@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "topscrape"
-version = "0.1.0"
+version = "0.1.3"
 description = "Declarative, resilient, and typed web scraping with Pydantic and selector fallback chains."
 readme = "README.md"
 license = { text = "MIT" }
