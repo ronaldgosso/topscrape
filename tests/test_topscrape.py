@@ -1,17 +1,17 @@
 """
 Tests for topscrape.
 """
+
 from __future__ import annotations
 
-import pytest
 import warnings
 
 import parsel
+import pytest
 
 from topscrape import Field, ScraperModel
 from topscrape.exceptions import ParseError, SelectorDriftWarning
 from topscrape.selectors.engine import resolve_field
-
 
 # ─────────────────────────────────────────────
 # Fixtures
@@ -43,6 +43,7 @@ def sel() -> parsel.Selector:
 # ─────────────────────────────────────────────
 # resolve_field tests
 # ─────────────────────────────────────────────
+
 
 class TestResolveField:
     def test_css_primary_match(self, sel):
@@ -95,6 +96,7 @@ class TestResolveField:
 # ─────────────────────────────────────────────
 # ScraperModel tests
 # ─────────────────────────────────────────────
+
 
 class TestScraperModel:
 
@@ -204,8 +206,10 @@ class TestScraperModel:
 # CLI tests
 # ─────────────────────────────────────────────
 
+
 class TestCLI:
     def test_cli_imports(self):
         from topscrape.cli import build_parser
+
         parser = build_parser()
         assert parser is not None

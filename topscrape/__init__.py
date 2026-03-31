@@ -2,14 +2,14 @@
 topscrape — Declarative, resilient, and typed web scraping.
 """
 
-from topscrape.models import ScraperModel
-from topscrape.fields import Field
 from topscrape.exceptions import (
-    ScrapeError,
     FetchError,
     ParseError,
+    ScrapeError,
     SelectorDriftWarning,
 )
+from topscrape.fields import Field
+from topscrape.models import ScraperModel
 
 __version__ = "0.1.0"
 __all__ = [

@@ -12,17 +12,18 @@ Examples
     topscrape https://example.com "//title" --xpath
     topscrape https://example.com "a" --attr href --all
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import sys
 
-from topscrape.exceptions import FetchError, ParseError
+import parsel
+
+from topscrape.exceptions import FetchError
 from topscrape.fetcher import fetch_sync
 from topscrape.selectors.engine import resolve_field
-
-import parsel
 
 
 def build_parser() -> argparse.ArgumentParser:

@@ -1,6 +1,7 @@
 """
 Low-level selector evaluation using parsel.
 """
+
 from __future__ import annotations
 
 import re

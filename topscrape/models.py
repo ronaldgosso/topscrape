@@ -1,6 +1,7 @@
 """
 ScraperModel — the declarative base class for all scrapers.
 """
+
 from __future__ import annotations
 
 import logging
@@ -80,24 +81,24 @@ class ScraperModel(BaseModel):
     # ------------------------------------------------------------------ #
 
     @classmethod
-    def from_html(cls, html: str, url: str = "") -> "ScraperModel":
+    def from_html(cls, html: str, url: str = "") -> ScraperModel:
         """Parse *html* and return a validated model instance."""
         return cls(**{"_html": html, "_url": url})
 
     @classmethod
-    def from_url(cls, url: str, **fetch_kwargs: Any) -> "ScraperModel":
+    def from_url(cls, url: str, **fetch_kwargs: Any) -> ScraperModel:
         """Fetch *url* synchronously and return a validated model instance."""
         html = fetch_sync(url, **fetch_kwargs)
         return cls.from_html(html, url=url)
 
     @classmethod
-    async def from_url_async(cls, url: str, **fetch_kwargs: Any) -> "ScraperModel":
+    async def from_url_async(cls, url: str, **fetch_kwargs: Any) -> ScraperModel:
         """Async version of :meth:`from_url`."""
         html = await fetch_async(url, **fetch_kwargs)
         return cls.from_html(html, url=url)
 
     @classmethod
-    def from_selector(cls, selector: parsel.Selector, url: str = "") -> "ScraperModel":
+    def from_selector(cls, selector: parsel.Selector, url: str = "") -> ScraperModel:
         """
         Build an instance directly from an existing ``parsel.Selector``.
         Useful when you want to reuse a fetched page for multiple models.

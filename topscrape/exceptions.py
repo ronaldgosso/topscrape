@@ -2,6 +2,8 @@
 Exceptions and warnings for topscrape.
 """
 
+from __future__ import annotations
+
 
 class ScrapeError(Exception):
     """Base class for all topscrape errors."""
@@ -27,8 +29,7 @@ class ParseError(ScrapeError):
         self.field_name = field_name
         self.selectors = selectors
         super().__init__(
-            f"Field '{field_name}': all selectors exhausted with no match. "
-            f"Tried: {selectors}"
+            f"Field '{field_name}': all selectors exhausted with no match. " f"Tried: {selectors}"
         )
 
 

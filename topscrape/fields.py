@@ -1,6 +1,7 @@
 """
 Field — declares how to extract a value from HTML.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
