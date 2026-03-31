@@ -1,7 +1,6 @@
 
 # topscrape
-
-![banner](./docs/topscr.png)
+<img width="1536" height="1024" alt="topscr" src="https://github.com/user-attachments/assets/926929bb-e04d-4556-9e08-144462961b22" />
 
 [![PyPI version](https://img.shields.io/pypi/v/topscrape.svg)](https://pypi.org/project/topscrape/)
 [![Python](https://img.shields.io/pypi/pyversions/topscrape.svg)](https://pypi.org/project/topscrape/)
