@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>topscrape — Declarative, Resilient Web Scraping</title>
+  <meta name="description" content="Define what you want to scrape. topscrape handles the rest — with selector fallback chains, drift detection, and Pydantic validation." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne+Mono&family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:       #080b0f;
+      --bg2:      #0d1117;
+      --bg3:      #111820;
+      --border:   #1e2a38;
+      --border2:  #243040;
+      --amber:    #f5a623;
+      --amber2:   #ffc84a;
+      --amber-dim:#7a5212;
+      --green:    #3dffa0;
+      --red:      #ff5c5c;
+      --text:     #c9d5e0;
+      --text-dim: #5c7080;
+      --text-mid: #8da0b0;
+      --white:    #eef4f8;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Grid background ──────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245,166,35,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Layout ───────────────────────────────────────── */
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Nav ──────────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--border);
+      background: rgba(8,11,15,0.88);
+      backdrop-filter: blur(12px);
+    }
+
+    nav .inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .nav-logo {
+      font-family: 'Syne Mono', monospace;
+      font-size: 1rem;
+      color: var(--amber);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-logo span { color: var(--text-dim); }
+
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a {
+      font-size: 0.82rem;
+      color: var(--text-mid);
+      text-decoration: none;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--amber); }
+
+    /* ── Hero ─────────────────────────────────────────── */
+    .hero {
+      padding: 120px 0 80px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--amber-dim);
+      color: var(--amber);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      padding: 5px 14px;
+      border-radius: 2px;
+      margin-bottom: 36px;
+      letter-spacing: 0.08em;
+      animation: fadeSlideDown 0.6s ease both;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--amber);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    h1 {
+      font-size: clamp(2.6rem, 6vw, 4.4rem);
+      font-weight: 800;
+      line-height: 1.05;
+      color: var(--white);
+      letter-spacing: -0.03em;
+      margin-bottom: 24px;
+      animation: fadeSlideDown 0.6s 0.1s ease both;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--amber);
+    }
+
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--text-mid);
+      max-width: 560px;
+      margin: 0 auto 44px;
+      font-weight: 400;
+      animation: fadeSlideDown 0.6s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeSlideDown 0.6s 0.3s ease both;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem;
+      padding: 11px 24px;
+      border-radius: 3px;
+      text-decoration: none;
+      font-weight: 400;
+      transition: all 0.2s;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-primary {
+      background: var(--amber);
+      color: #080b0f;
+      border: 1px solid var(--amber);
+    }
+    .btn-primary:hover {
+      background: var(--amber2);
+      border-color: var(--amber2);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(245,166,35,0.3);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border2);
+    }
+    .btn-ghost:hover {
+      border-color: var(--amber-dim);
+      color: var(--amber);
+      transform: translateY(-1px);
+    }
+
+    .badges {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 32px;
+      animation: fadeSlideDown 0.6s 0.4s ease both;
+    }
+
+    .badges img { height: 20px; }
+
+    @keyframes fadeSlideDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Install strip ────────────────────────────────── */
+    .install-strip {
+      margin: 0 auto 80px;
+      max-width: 620px;
+    }
+
+    .install-box {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      gap: 16px;
+    }
+
+    .install-box code {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--amber);
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--text-mid);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      padding: 5px 12px;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .copy-btn:hover { border-color: var(--amber-dim); color: var(--amber); }
+    .copy-btn.copied { border-color: var(--green); color: var(--green); }
+
+    /* ── Section headers ──────────────────────────────── */
+    .section { padding: 80px 0; }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      color: var(--text-mid);
+      font-size: 1rem;
+      max-width: 540px;
+      margin-bottom: 48px;
+    }
+
+    /* ── Feature grid ─────────────────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .feature-card {
+      background: var(--bg2);
+      padding: 28px;
+      transition: background 0.2s;
+    }
+
+    .feature-card:hover { background: var(--bg3); }
+
+    .feature-icon {
+      font-size: 1.4rem;
+      margin-bottom: 14px;
+      display: block;
+    }
+
+    .feature-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .feature-desc {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    /* ── Code tabs ────────────────────────────────────── */
+    .code-section { padding: 80px 0; }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+      overflow-x: auto;
+    }
+
+    .tab {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      padding: 10px 20px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.15s;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+    }
+
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+
+    .code-block {
+      display: none;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      padding: 28px;
+      overflow-x: auto;
+    }
+
+    .code-block.active { display: block; }
+
+    .code-block pre {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.83rem;
+      line-height: 1.75;
+      color: var(--text);
+    }
+
+    /* syntax highlight tokens */
+    .kw  { color: #79b8ff; }
+    .cl  { color: var(--amber2); }
+    .fn  { color: #b392f0; }
+    .st  { color: #9ecbff; }
+    .co  { color: #444d58; font-style: italic; }
+    .nb  { color: var(--text-mid); }
+    .am  { color: var(--amber); }
+    .gr  { color: var(--green); }
+    .rd  { color: var(--red); }
+
+    /* ── Drift diagram ────────────────────────────────── */
+    .drift-demo {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      padding: 32px;
+      margin-top: 40px;
+    }
+
+    .drift-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .selector-chain {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .sel-node {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border-radius: 3px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+    }
+
+    .sel-node.failed {
+      background: rgba(255,92,92,0.08);
+      border: 1px solid rgba(255,92,92,0.25);
+      color: var(--red);
+      text-decoration: line-through;
+      opacity: 0.7;
+    }
+
+    .sel-node.success {
+      background: rgba(61,255,160,0.08);
+      border: 1px solid rgba(61,255,160,0.3);
+      color: var(--green);
+    }
+
+    .sel-arrow {
+      color: var(--text-dim);
+      font-size: 0.75rem;
+    }
+
+    .drift-warning {
+      margin-top: 16px;
+      background: rgba(245,166,35,0.06);
+      border: 1px solid rgba(245,166,35,0.2);
+      border-radius: 3px;
+      padding: 12px 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.76rem;
+      color: var(--amber);
+      line-height: 1.6;
+    }
+
+    /* ── API table ────────────────────────────────────── */
+    .api-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .api-table th {
+      text-align: left;
+      padding: 10px 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .api-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text);
+    }
+
+    .api-table tr:last-child td { border-bottom: none; }
+    .api-table tr:hover td { background: var(--bg3); }
+
+    .api-table code {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--amber);
+    }
+
+    .api-table .desc { color: var(--text-mid); font-size: 0.85rem; }
+
+    .api-table-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+
+    .api-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg3);
+    }
+
+    /* ── Footer ───────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      text-align: center;
+    }
+
+    footer .foot-logo {
+      font-family: 'Syne Mono', monospace;
+      font-size: 1rem;
+      color: var(--amber);
+      margin-bottom: 12px;
+    }
+
+    footer p {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+
+    footer a { color: var(--text-mid); text-decoration: none; }
+    footer a:hover { color: var(--amber); }
+
+    .foot-links {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .foot-links a {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Divider ──────────────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    /* ── Responsive ───────────────────────────────────── */
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .hero { padding: 80px 0 60px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .selector-chain { flex-direction: column; align-items: flex-start; }
+      .sel-arrow { transform: rotate(90deg); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="inner">
+    <a class="nav-logo" href="#">struct<span>scrape</span></a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#usage">Usage</a></li>
+      <li><a href="#drift">Drift Detection</a></li>
+      <li><a href="#api">API</a></li>
+      <li><a href="https://github.com/ronaldgosso/topscrape">GitHub ↗</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-badge">v0.1.0 · MIT · Python 3.9+</div>
+
+    <h1>Scraping that survives<br/><em>when sites change.</em></h1>
+
+    <p class="hero-sub">
+      Define your data model once. topscrape tries every selector in your chain,
+      validates the result with Pydantic, and warns you the moment something drifts.
+    </p>
+
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="https://pypi.org/project/topscrape">
+        ↓ Install from PyPI
+      </a>
+      <a class="btn btn-ghost" href="https://github.com/ronaldgosso/topscrape">
+        ★ View on GitHub
+      </a>
+    </div>
+
+    <div class="badges">
+      <img src="https://img.shields.io/pypi/v/topscrape.svg?style=flat-square&colorB=f5a623" alt="PyPI" />
+      <img src="https://img.shields.io/pypi/pyversions/topscrape.svg?style=flat-square" alt="Python" />
+      <img src="https://img.shields.io/github/actions/workflow/status/ronaldgosso/topscrape/ci.yml?style=flat-square&label=CI" alt="CI" />
+      <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="MIT" />
+    </div>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<div class="wrap">
+  <div class="install-strip">
+    <div class="install-box">
+      <code>pip install topscrape</code>
+      <button class="copy-btn" onclick="copyInstall(this)">copy</button>
+    </div>
+  </div>
+</div>
+
+<hr class="divider" />
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="wrap">
+    <div class="section-label">Why topscrape</div>
+    <h2>Everything a maintainable scraper needs.</h2>
+    <p class="section-desc">
+      Built on the modern Python stack — Pydantic V2, httpx, parsel — and
+      designed so you spend time on your data, not your selectors.
+    </p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">🧩</span>
+        <div class="feature-title">Declarative Models</div>
+        <p class="feature-desc">Subclass ScraperModel, annotate your fields — that's your scraper. No soup loops, no manual None checks.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">⛓️</span>
+        <div class="feature-title">Selector Chains</div>
+        <p class="feature-desc">List multiple CSS selectors, XPath expressions, or regex patterns per field. First match wins, automatically.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📡</span>
+        <div class="feature-title">Drift Detection</div>
+        <p class="feature-desc">When a fallback fires, you get a SelectorDriftWarning with the exact field and selector. Catch breakage before it breaks.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">✅</span>
+        <div class="feature-title">Pydantic Validation</div>
+        <p class="feature-desc">Get float, not "$19.99". Types are enforced at parse time. Bad data raises a clear, typed exception.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">⚡</span>
+        <div class="feature-title">Async Ready</div>
+        <p class="feature-desc">Every constructor has an async twin. Scrape hundreds of pages concurrently with asyncio and httpx.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔧</span>
+        <div class="feature-title">Transform Pipeline</div>
+        <p class="feature-desc">Pass a lambda to clean raw strings before validation. Strip symbols, convert units, normalise casing — inline.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- USAGE -->
+<section class="code-section" id="usage">
+  <div class="wrap">
+    <div class="section-label">Usage</div>
+    <h2>From zero to typed data in minutes.</h2>
+    <p class="section-desc">
+      Real examples — from a simple CSS extraction to async scraping with transforms.
+    </p>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('basic', this)">Basic</button>
+      <button class="tab" onclick="showTab('transform', this)">Transforms</button>
+      <button class="tab" onclick="showTab('async', this)">Async</button>
+      <button class="tab" onclick="showTab('multiple', this)">Multiple values</button>
+      <button class="tab" onclick="showTab('cli', this)">CLI</button>
+    </div>
+
+    <div class="code-block active" id="tab-basic">
+      <pre><span class="kw">from</span> topscrape <span class="kw">import</span> <span class="cl">ScraperModel</span>, <span class="cl">Field</span>
+
+<span class="kw">class</span> <span class="cl">Product</span>(<span class="cl">ScraperModel</span>):
+    title:  <span class="nb">str</span>   = <span class="fn">Field</span>(selectors=[<span class="st">"h1.title"</span>, <span class="st">"h1"</span>])
+    price:  <span class="nb">str</span>   = <span class="fn">Field</span>(selectors=[<span class="st">".product-price"</span>, <span class="st">"[data-price]"</span>])
+    rating: <span class="nb">float</span> = <span class="fn">Field</span>(selectors=[<span class="st">"[data-rating]"</span>], attr=<span class="st">"data-rating"</span>)
+    badge:  <span class="nb">str</span>   = <span class="fn">Field</span>(selectors=[<span class="st">".badge"</span>], default=<span class="st">"N/A"</span>)
+
+<span class="co"># Sync — one line fetch + parse</span>
+product = <span class="cl">Product</span>.<span class="fn">from_url</span>(<span class="st">"https://example.com/item/1"</span>)
+
+<span class="nb">print</span>(product.title)   <span class="co"># → "Best Laptop 2024"</span>
+<span class="nb">print</span>(product.rating)  <span class="co"># → 4.7  (float, not "4.7")</span>
+<span class="nb">print</span>(product.badge)   <span class="co"># → "N/A"  (default used)</span></pre>
+    </div>
+
+    <div class="code-block" id="tab-transform">
+      <pre><span class="kw">from</span> topscrape <span class="kw">import</span> <span class="cl">ScraperModel</span>, <span class="cl">Field</span>
+
+<span class="kw">class</span> <span class="cl">Product</span>(<span class="cl">ScraperModel</span>):
+    <span class="co"># transform runs BEFORE Pydantic validation</span>
+    price: <span class="nb">float</span> = <span class="fn">Field</span>(
+        selectors=[<span class="st">".price"</span>, <span class="st">"[data-price]"</span>, <span class="st">"//span[@itemprop='price']"</span>],
+        transform=<span class="kw">lambda</span> v: v.<span class="fn">replace</span>(<span class="st">"$"</span>, <span class="st">""</span>).<span class="fn">replace</span>(<span class="st">","</span>, <span class="st">""</span>),
+    )
+    <span class="co"># XPath selector — any string starting with //</span>
+    sku: <span class="nb">str</span> = <span class="fn">Field</span>(selectors=[<span class="st">"//meta[@name='sku']"</span>], attr=<span class="st">"content"</span>)
+    <span class="co"># Regex selector — prefix with r:</span>
+    version: <span class="nb">str</span> = <span class="fn">Field</span>(selectors=[<span class="st">r"r:v(\d+\.\d+\.\d+)"</span>], default=<span class="st">""</span>)
+
+product = <span class="cl">Product</span>.<span class="fn">from_html</span>(html_string)
+<span class="nb">print</span>(product.price)  <span class="co"># → 1299.99  ← float, not "$1,299.99"</span></pre>
+    </div>
+
+    <div class="code-block" id="tab-async">
+      <pre><span class="kw">import</span> asyncio
+<span class="kw">from</span> topscrape <span class="kw">import</span> <span class="cl">ScraperModel</span>, <span class="cl">Field</span>
+
+<span class="kw">class</span> <span class="cl">Article</span>(<span class="cl">ScraperModel</span>):
+    title:   <span class="nb">str</span> = <span class="fn">Field</span>(selectors=[<span class="st">"h1"</span>, <span class="st">".article-title"</span>])
+    author:  <span class="nb">str</span> = <span class="fn">Field</span>(selectors=[<span class="st">".byline"</span>], default=<span class="st">"Unknown"</span>)
+
+<span class="kw">async def</span> <span class="fn">scrape_many</span>(urls: <span class="nb">list</span>[<span class="nb">str</span>]):
+    tasks = [<span class="cl">Article</span>.<span class="fn">from_url_async</span>(url) <span class="kw">for</span> url <span class="kw">in</span> urls]
+    articles = <span class="kw">await</span> asyncio.<span class="fn">gather</span>(*tasks)
+    <span class="kw">return</span> articles
+
+<span class="co"># Runs all requests concurrently</span>
+articles = asyncio.<span class="fn">run</span>(<span class="fn">scrape_many</span>(urls))
+<span class="kw">for</span> a <span class="kw">in</span> articles:
+    <span class="nb">print</span>(a.title, <span class="st">"—"</span>, a.author)</pre>
+    </div>
+
+    <div class="code-block" id="tab-multiple">
+      <pre><span class="kw">from</span> topscrape <span class="kw">import</span> <span class="cl">ScraperModel</span>, <span class="cl">Field</span>
+
+<span class="kw">class</span> <span class="cl">ProductPage</span>(<span class="cl">ScraperModel</span>):
+    <span class="co"># multiple=True → returns list of all matches</span>
+    features: <span class="nb">list</span>[<span class="nb">str</span>] = <span class="fn">Field</span>(
+        selectors=[<span class="st">".feature-list li"</span>, <span class="st">".specs td"</span>],
+        multiple=<span class="kw">True</span>,
+    )
+    images: <span class="nb">list</span>[<span class="nb">str</span>] = <span class="fn">Field</span>(
+        selectors=[<span class="st">"img.gallery-photo"</span>],
+        attr=<span class="st">"src"</span>,
+        multiple=<span class="kw">True</span>,
+    )
+
+page = <span class="cl">ProductPage</span>.<span class="fn">from_html</span>(html)
+<span class="nb">print</span>(page.features)  <span class="co"># → ["16GB RAM", "1TB SSD", "4K Display"]</span>
+<span class="nb">print</span>(<span class="nb">len</span>(page.images))  <span class="co"># → 5</span></pre>
+    </div>
+
+    <div class="code-block" id="tab-cli">
+      <pre><span class="co"># Extract the page title</span>
+<span class="gr">$ topscrape</span> https://example.com <span class="st">"title"</span>
+Example Domain
+
+<span class="co"># Try two selectors — fallback chain</span>
+<span class="gr">$ topscrape</span> https://example.com <span class="st">".price"</span> <span class="st">"[data-price]"</span>
+<span class="am">[DRIFT WARNING] Primary selector '.price' failed; used fallback[1] '[data-price]'.</span>
+19.99
+
+<span class="co"># Extract an attribute</span>
+<span class="gr">$ topscrape</span> https://example.com <span class="st">"a.hero-link"</span> <span class="st">--attr</span> href
+
+<span class="co"># All matches as JSON</span>
+<span class="gr">$ topscrape</span> https://example.com <span class="st">"li.feature"</span> <span class="st">--all --json</span></pre>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- DRIFT DETECTION -->
+<section class="section" id="drift">
+  <div class="wrap">
+    <div class="section-label">Drift Detection</div>
+    <h2>Know when a site changes, before it breaks.</h2>
+    <p class="section-desc">
+      topscrape tracks which selector in your chain matched. The moment
+      a fallback fires, you get a precise warning — not a silent None.
+    </p>
+
+    <div class="drift-demo">
+      <div class="drift-title">// Selector chain evaluation — field: price</div>
+      <div class="selector-chain">
+        <div class="sel-node failed">
+          <span>✕</span> <span>.product-price</span>
+        </div>
+        <span class="sel-arrow">→</span>
+        <div class="sel-node failed">
+          <span>✕</span> <span>.price</span>
+        </div>
+        <span class="sel-arrow">→</span>
+        <div class="sel-node success">
+          <span>✓</span> <span>[data-price]</span>
+        </div>
+      </div>
+      <div class="drift-warning">
+        ⚠ UserWarning: [Selector Drift] Field 'price' on &lt;https://shop.example.com/item/1&gt;:<br />
+        &nbsp;&nbsp;primary selector '.product-price' failed;<br />
+        &nbsp;&nbsp;used fallback[2] '[data-price]'.
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- API REFERENCE -->
+<section class="section" id="api">
+  <div class="wrap">
+    <div class="section-label">API Reference</div>
+    <h2>Everything you need, nothing you don't.</h2>
+
+    <div class="api-table-wrap">
+      <div class="api-label">Field( selectors, ... )</div>
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>selectors</code></td>
+            <td><code>list[str]</code></td>
+            <td class="desc">Ordered list to try. CSS by default; prefix <code>//</code> for XPath; prefix <code>r:</code> for regex.</td>
+          </tr>
+          <tr>
+            <td><code>attr</code></td>
+            <td><code>str | None</code></td>
+            <td class="desc">HTML attribute to extract instead of text content. e.g. <code>"href"</code>, <code>"src"</code>.</td>
+          </tr>
+          <tr>
+            <td><code>transform</code></td>
+            <td><code>callable | None</code></td>
+            <td class="desc">Applied to the raw string before Pydantic validation. Use to clean, strip, or convert.</td>
+          </tr>
+          <tr>
+            <td><code>default</code></td>
+            <td><code>Any</code></td>
+            <td class="desc">Returned when all selectors fail. Default is <code>...</code> (field is required).</td>
+          </tr>
+          <tr>
+            <td><code>multiple</code></td>
+            <td><code>bool</code></td>
+            <td class="desc">Return all matches as a list instead of only the first. Default: <code>False</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="api-table-wrap">
+      <div class="api-label">ScraperModel — constructors</div>
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>.from_html(html, url="")</code></td>
+            <td class="desc">Parse a raw HTML string.</td>
+          </tr>
+          <tr>
+            <td><code>.from_url(url, **kwargs)</code></td>
+            <td class="desc">Fetch + parse synchronously. Extra kwargs forwarded to httpx.</td>
+          </tr>
+          <tr>
+            <td><code>await .from_url_async(url, **kwargs)</code></td>
+            <td class="desc">Async fetch + parse. Ideal for concurrent scraping with asyncio.gather.</td>
+          </tr>
+          <tr>
+            <td><code>.from_selector(selector, url="")</code></td>
+            <td class="desc">Parse from an existing <code>parsel.Selector</code> — reuse one fetch for multiple models.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="foot-logo">topscrape</div>
+    <p>Built by <a href="https://github.com/ronaldgosso">Ronald Isack Gosso</a> · MIT License</p>
+    <div class="foot-links">
+      <a href="https://pypi.org/project/topscrape">PyPI</a>
+      <a href="https://github.com/ronaldgosso/topscrape">GitHub</a>
+      <a href="https://github.com/ronaldgosso/topscrape/issues">Issues</a>
+      <a href="https://github.com/ronaldgosso">ronaldgosso</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function showTab(id, btn) {
+    document.querySelectorAll('.code-block').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function copyInstall(btn) {
+    navigator.clipboard.writeText('pip install topscrape').then(() => {
+      btn.textContent = 'copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+</script>
+
+</body>
+</html>
