@@ -1,12 +1,23 @@
-
-# topscrape
+<div align="center">
+<h1>topscrape</h1>
 <img width="1536" height="1024" alt="topscr" src="https://github.com/user-attachments/assets/926929bb-e04d-4556-9e08-144462961b22" />
 
 [![PyPI version](https://img.shields.io/pypi/v/topscrape.svg)](https://pypi.org/project/topscrape/)
 [![Python](https://img.shields.io/pypi/pyversions/topscrape.svg)](https://pypi.org/project/topscrape/)
 [![CI](https://github.com/ronaldgosso/topscrape/actions/workflows/ci.yml/badge.svg)](https://github.com/ronaldgosso/topscrape/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[Website - 🌐](https://ronaldgosso.github.io/topscrape/)
+[![Downloads](https://img.shields.io/pypi/dm/topscrape.svg)](https://pypi.org/project/topscrape/)
+
+
+<br/>
+
+**[📖 Landing Page](https://ronaldgosso.github.io/topscrape/)** &nbsp;·&nbsp;
+**[📦 PyPI](https://pypi.org/project/topscrape/)** &nbsp;·&nbsp;
+**[🐛 Issues](https://github.com/ronaldgosso/topscrape/issues)**
+
+<br/>
+
+</div>
 
 > **Declarative, resilient, and typed web scraping.**  
 > Define *what* you want — topscrape figures out *how* to get it, even when the site changes.
@@ -81,6 +92,8 @@ Requires Python 3.9+.
 ---
 
 # ⚡ Quick Start
+
+## Google Colab Example - [Link](https://colab.research.google.com/drive/11xokydwd4tM0aKL9ofUYbtuPkclnnvLm?usp=sharing)
 
 ## Basic Extraction
 
